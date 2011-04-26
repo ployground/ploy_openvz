@@ -86,6 +86,12 @@ class Instance(PlainInstance):
                 log.info("Instance state: %s", status['status'])
                 log.info("Instance already started")
                 return True
+        options = {}
+        for key in self.config:
+            if key.startswith('set-'):
+                options[key] = self.config[key]
+        if options:
+            self.master.vzctl('set', self.config['veid'], save=True, **options)
         log.info("Starting instance '%s'", self.config['veid'])
         self.master.vzctl('start', self.config['veid'])
         startup_script = self.startup_script(overrides=overrides)
@@ -230,6 +236,24 @@ class Master(object):
                     log.info(line)
         elif command == 'destroy':
             rin, rout, rerr = self.conn.exec_command('sudo vzctl destroy %s' % veid)
+            out = rout.read().strip()
+            err = rerr.read().strip()
+            if out:
+                for line in out.split('\n'):
+                    log.info(line)
+            if err:
+                for line in err.split('\n'):
+                    log.info(line)
+        elif command == 'set':
+            options = []
+            if 'save' in kwargs and kwargs['save']:
+                options.append('--save')
+            for key in kwargs:
+                if not key.startswith('set-'):
+                    continue
+                options.append("--%s %s" % (key[4:], kwargs[key]))
+            options = " ".join(options)
+            rin, rout, rerr = self.conn.exec_command('sudo vzctl set %s %s' % (veid, options))
             out = rout.read().strip()
             err = rerr.read().strip()
             if out:
