@@ -104,10 +104,12 @@ class Instance(PlainInstance):
             sys.stdout.write("\n")
             sys.stdout.flush()
             log.info("Running startup_script")
+            cmd_fmt = 'base64 -d > /etc/startup_script <<_END_OF_SCRIPT_\n%s\n_END_OF_SCRIPT_\n'
+            cmd = cmd_fmt % startup_script.encode('base64')
             out, err = self.master.vzctl(
                 'exec',
                 self.config['veid'],
-                cmd='cat > /etc/startup_script <<_END_OF_SCRIPT_\n%s\n_END_OF_SCRIPT_\n' % startup_script)
+                cmd=cmd)
             if out:
                 for line in out.split('\n'):
                     log.info(line)
@@ -117,7 +119,7 @@ class Instance(PlainInstance):
             out, err = self.master.vzctl(
                 'exec',
                 self.config['veid'],
-                cmd='chmod 0600 /etc/startup_script')
+                cmd='chmod 0700 /etc/startup_script')
             if out:
                 for line in out.split('\n'):
                     log.info(line)
@@ -127,7 +129,7 @@ class Instance(PlainInstance):
             out, err = self.master.vzctl(
                 'exec',
                 self.config['veid'],
-                cmd='/bin/sh /etc/startup_script &')
+                cmd='/etc/startup_script &')
             if out:
                 for line in out.split('\n'):
                     log.info(line)
