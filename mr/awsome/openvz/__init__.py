@@ -294,25 +294,27 @@ class Master(object):
     @lazy
     def vzlist_options(self):
         out, err = self._exec("%s -L" % self.vzlist_binary)
-        results = {}
+        header_map = {}
+        option_map = {}
         for line in out.split('\n'):
             line = line.strip()
             if not line:
                 continue
             option, header = line.split()
-            if option == 'vpsid':
+            option_map[option] = header
+            if header in header_map:
                 continue
-            results[header] = option
-        return results
+            header_map[header] = option
+        return header_map, option_map
 
     def vzlist(self, veid=None, info=None):
+        header_map, option_map = self.vzlist_options
+        veid_option = header_map[option_map['veid']]
         if info is None:
-            info = ('veid', 'status', 'ip', 'hostname', 'name')
+            info = (veid_option, 'status', 'ip', 'hostname', 'name')
         info = set(info)
-        info.add('veid')
-        vzlist_options = self.vzlist_options
-        options = set(self.vzlist_options.values())
-        unknown = info - options
+        info.add(veid_option)
+        unknown = info - set(option_map)
         if unknown:
             raise ValueError("Unknown options in vzlist call: %s" % ", ".join(unknown))
         if veid is None:
@@ -328,17 +330,18 @@ class Master(object):
                 return {}
             else:
                 return None
-        else:
+        elif err:
             raise ValueError(err)
         lines = out.split('\n')
-        headers = [vzlist_options[x] for x in lines[0].split()]
+        headers = [header_map[x] for x in lines[0].split()]
         results = {}
         for line in lines[1:]:
             line = line.strip()
             if not line:
                 continue
             values = dict(zip(headers, line.split()))
-            results[values['veid']] = values
+            results[values[veid_option]] = values
+            del values[veid_option]
         if veid is not None:
             return results[str(veid)]
         return results
