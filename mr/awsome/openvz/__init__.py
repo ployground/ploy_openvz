@@ -11,6 +11,10 @@ import time
 log = logging.getLogger('mr.awsome.openvz')
 
 
+class OpenVZError(Exception):
+    pass
+
+
 class Instance(PlainInstance):
     def get_config(self, overrides=None):
         massagers = get_massagers()
@@ -75,12 +79,17 @@ class Instance(PlainInstance):
         if status is None:
             create = True
             log.info("Creating instance '%s'", self.config['veid'])
-            self.master.vzctl(
-                'create',
-                self.config['veid'],
-                ip=self.config['ip'],
-                hostname=self.config['hostname'],
-                ostemplate=self.config['ostemplate'])
+            try:
+                self.master.vzctl(
+                    'create',
+                    self.config['veid'],
+                    ip=self.config['ip'],
+                    hostname=self.config['hostname'],
+                    ostemplate=self.config['ostemplate'])
+            except OpenVZError as e:
+                for line in e.args[0].split('\n'):
+                    log.error(line)
+                sys.exit(1)
         else:
             if status['status'] != 'stopped':
                 log.info("Instance state: %s", status['status'])
@@ -185,9 +194,27 @@ class Master(object):
         self.config = config
         self.known_hosts = os.path.join(self.config.path, 'known_hosts')
         self.instances = {}
-        self.instance = PlainInstance(self, id, self.config['vz-master'][id])
+        master_config = self.config['vz-master'][id]
+        self.instance = PlainInstance(self, id, master_config)
         for sid, config in self.config.get('vz-instance', {}).iteritems():
             self.instances[sid] = Instance(self, sid, config)
+        self.debug = master_config.get('debug-commands', False)
+
+    @lazy
+    def vzctl_binary(self):
+        binary = ""
+        if self.config.get('sudo'):
+            binary = binary + "sudo "
+        binary = binary + self.config.get('vzctl', 'vzctl')
+        return binary
+
+    @lazy
+    def vzlist_binary(self):
+        binary = ""
+        if self.config.get('sudo'):
+            binary = binary + "sudo "
+        binary = binary + self.config.get('vzlist', 'vzlist')
+        return binary
 
     @lazy
     def conn(self):
@@ -200,10 +227,30 @@ class Master(object):
             sys.exit(1)
         return client
 
+    def _exec(self, cmd, debug=False):
+        if debug:
+            log.info(cmd)
+        rin, rout, rerr = self.conn.exec_command(cmd)
+        out = rout.read()
+        err = rerr.read()
+        if debug and out.strip():
+            for line in out.split('\n'):
+                log.info(line)
+        if debug and err.strip():
+            for line in err.split('\n'):
+                log.error(line)
+        return out, err
+
+    def _vzctl(self, cmd):
+        return self._exec("%s %s" % (self.vzctl_binary, cmd), self.debug)
+
+    def _vzlist(self, cmd):
+        return self._exec("%s %s" % (self.vzlist_binary, cmd), self.debug)
+
     def vzctl(self, command, veid, **kwargs):
         if command == 'status':
-            rin, rout, rerr = self.conn.exec_command('sudo vzctl status %s' % veid)
-            out = rout.read().strip().split()
+            out, err = self._vzctl('status %s' % veid)
+            out = out.strip().split()
             if out[0] != 'VEID':
                 raise ValueError
             if out[0] != 'VEID':
@@ -215,35 +262,11 @@ class Master(object):
                 'filesystem': out[3],
                 'status': out[4]}
         elif command == 'start':
-            rin, rout, rerr = self.conn.exec_command('sudo vzctl start %s' % veid)
-            out = rout.read().strip()
-            err = rerr.read().strip()
-            if out:
-                for line in out.split('\n'):
-                    log.info(line)
-            if err:
-                for line in err.split('\n'):
-                    log.info(line)
+            self._vzctl('start %s' % veid)
         elif command == 'stop':
-            rin, rout, rerr = self.conn.exec_command('sudo vzctl stop %s' % veid)
-            out = rout.read().strip()
-            err = rerr.read().strip()
-            if out:
-                for line in out.split('\n'):
-                    log.info(line)
-            if err:
-                for line in err.split('\n'):
-                    log.info(line)
+            self._vzctl('stop %s' % veid)
         elif command == 'destroy':
-            rin, rout, rerr = self.conn.exec_command('sudo vzctl destroy %s' % veid)
-            out = rout.read().strip()
-            err = rerr.read().strip()
-            if out:
-                for line in out.split('\n'):
-                    log.info(line)
-            if err:
-                for line in err.split('\n'):
-                    log.info(line)
+            self._vzctl('destroy %s' % veid)
         elif command == 'set':
             options = []
             if 'save' in kwargs and kwargs['save']:
@@ -253,38 +276,26 @@ class Master(object):
                     continue
                 options.append("--%s %s" % (key[4:], kwargs[key]))
             options = " ".join(options)
-            rin, rout, rerr = self.conn.exec_command('sudo vzctl set %s %s' % (veid, options))
-            out = rout.read().strip()
-            err = rerr.read().strip()
-            if out:
-                for line in out.split('\n'):
-                    log.info(line)
-            if err:
-                for line in err.split('\n'):
-                    log.info(line)
+            self._vzctl('set %s %s' % (veid, options))
         elif command == 'exec':
-            rin, rout, rerr = self.conn.exec_command('sudo vzctl exec %s "%s"' % (veid, kwargs['cmd']))
-            out = rout.read()
-            err = rerr.read()
-            return out, err
+            return self._vzctl('exec %s "%s"' % (veid, kwargs['cmd']))
         elif command == 'create':
-            rin, rout, rerr = self.conn.exec_command(
-                'sudo vzctl create %s --ostemplate "%s" --ipadd "%s" --hostname "%s"' % (
-                    veid,
-                    kwargs['ostemplate'],
-                    kwargs['ip'],
-                    kwargs['hostname']))
-            out = rout.read()
-            err = rerr.read()
-            return out, err
+            cmd = 'create %s --ostemplate "%s" --ipadd "%s" --hostname "%s"' % (
+                veid,
+                kwargs['ostemplate'],
+                kwargs['ip'],
+                kwargs['hostname'])
+            out, err = self._vzctl(cmd)
+            if err:
+                raise OpenVZError(err.strip())
         else:
             raise ValueError("Unknown command '%s'" % command)
 
     @lazy
     def vzlist_options(self):
-        rin, rout, rerr = self.conn.exec_command('sudo vzlist -L')
+        out, err = self._exec("%s -L" % self.vzlist_binary)
         results = {}
-        for line in rout.read().split('\n'):
+        for line in out.split('\n'):
             line = line.strip()
             if not line:
                 continue
@@ -305,14 +316,19 @@ class Master(object):
         if unknown:
             raise ValueError("Unknown options in vzlist call: %s" % ", ".join(unknown))
         if veid is None:
-            rin, rout, rerr = self.conn.exec_command('sudo vzlist -a -o %s' % ','.join(info))
-            out = rout.read()
-            err = rerr.read().strip()
+            cmd = '-a -o %s' % ','.join(info)
+            out, err = self._vzlist(cmd)
+            err = err.strip()
         else:
-            rin, rout, rerr = self.conn.exec_command('sudo vzlist -a -o %s %s' % (','.join(info), veid))
-            out = rout.read()
-            err = rerr.read().strip()
-        if err:
+            cmd = '-a -o %s %s' % (','.join(info), veid)
+            out, err = self._vzlist(cmd)
+            err = err.strip()
+        if err == 'Container(s) not found':
+            if veid is None:
+                return {}
+            else:
+                return None
+        else:
             raise ValueError(err)
         lines = out.split('\n')
         headers = [vzlist_options[x] for x in lines[0].split()]
@@ -332,6 +348,20 @@ def get_massagers():
     def massage_veid(config, value):
         return int(value)
 
+    def massage_sudo(config, value):
+        if value.lower() in ('true', 'yes', 'on'):
+            return True
+        elif value.lower() in ('false', 'no', 'off'):
+            return False
+        raise ValueError("Unknown value %s for sudo." % value)
+
+    def massage_debug_commands(config, value):
+        if value.lower() in ('true', 'yes', 'on'):
+            return True
+        elif value.lower() in ('false', 'no', 'off'):
+            return False
+        raise ValueError("Unknown value %s for debug-commands." % value)
+
     def massage_startup_script(config, value):
         result = dict()
         if value.startswith('gzip:'):
@@ -343,6 +373,8 @@ def get_massagers():
         return result
 
     return {
+        ('vz-master', 'sudo'): massage_sudo,
+        ('vz-master', 'debug-commands'): massage_debug_commands,
         ('vz-instance', 'veid'): massage_veid,
         ('vz-instance', 'startup_script'): massage_startup_script}
 
