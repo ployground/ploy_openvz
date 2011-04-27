@@ -110,7 +110,7 @@ class Instance(PlainInstance):
                 sys.stdout.write(".")
                 sys.stdout.flush()
                 out, err = self.master.vzctl('exec', self.config['veid'], cmd="runlevel")
-                if out != "unknown":
+                if not out.startswith("unknown"):
                     break
                 time.sleep(5)
             else:
