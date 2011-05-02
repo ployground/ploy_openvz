@@ -1,9 +1,9 @@
-from mr.awsome import template
-from mr.awsome.common import gzip_string
+from mr.awsome.common import BaseMaster, StartupScriptMixin
+from mr.awsome.config import BooleanMassager, IntegerMassager, PathMassager
+from mr.awsome.config import StartupScriptMassager, UserMassager
 from mr.awsome.lazy import lazy
 from mr.awsome.plain import Instance as PlainInstance
 import logging
-import os
 import sys
 import time
 
@@ -15,17 +15,8 @@ class OpenVZError(Exception):
     pass
 
 
-class Instance(PlainInstance):
-    def get_config(self, overrides=None):
-        massagers = get_massagers()
-        if overrides is None:
-            overrides = {}
-        config = self.config.copy()
-        for key in overrides:
-            massage = massagers.get(('vz-instance', key))
-            if callable(massage):
-                config[key] = massage(self.master.config, overrides[key])
-        return config
+class Instance(PlainInstance, StartupScriptMixin):
+    sectiongroupname = 'vz-instance'
 
     def get_host(self):
         return self.config['ip']
@@ -34,25 +25,6 @@ class Instance(PlainInstance):
         out, err = self.master.vzctl('exec', self.config['veid'], cmd='ssh-keygen -lf /etc/ssh/ssh_host_rsa_key.pub')
         info = out.split()
         return info[1]
-
-    def startup_script(self, overrides=None, debug=False):
-        config = self.get_config(overrides)
-        startup_script_path = config.get('startup_script', None)
-        if startup_script_path is None:
-            return ''
-        startup_script = template.Template(
-            startup_script_path['path'],
-            pre_filter=template.strip_hashcomments,
-        )
-        result = startup_script(**config)
-        if startup_script_path.get('gzip', False):
-            result = "\n".join([
-                "#!/bin/bash",
-                "tail -n+4 $0 | gunzip -c | bash",
-                "exit $?",
-                gzip_string(result)
-            ])
-        return result
 
     def vzlist(self, **kwargs):
         try:
@@ -188,32 +160,29 @@ class Instance(PlainInstance):
         log.info("Instance terminated")
 
 
-class Master(object):
-    def __init__(self, config, id):
-        self.id = id
-        self.config = config
-        self.known_hosts = os.path.join(self.config.path, 'known_hosts')
-        self.instances = {}
-        master_config = self.config['vz-master'][id]
-        self.instance = PlainInstance(self, id, master_config)
-        for sid, config in self.config.get('vz-instance', {}).iteritems():
-            self.instances[sid] = Instance(self, sid, config)
-        self.debug = master_config.get('debug-commands', False)
+class Master(BaseMaster):
+    sectiongroupname = 'vz-instance'
+    instance_class = Instance
+
+    def __init__(self, *args, **kwargs):
+        BaseMaster.__init__(self, *args, **kwargs)
+        self.instance = PlainInstance(self, self.id, self.master_config)
+        self.debug = self.master_config.get('debug-commands', False)
 
     @lazy
     def vzctl_binary(self):
         binary = ""
-        if self.config.get('sudo'):
+        if self.main_config.get('sudo'):
             binary = binary + "sudo "
-        binary = binary + self.config.get('vzctl', 'vzctl')
+        binary = binary + self.main_config.get('vzctl', 'vzctl')
         return binary
 
     @lazy
     def vzlist_binary(self):
         binary = ""
-        if self.config.get('sudo'):
+        if self.main_config.get('sudo'):
             binary = binary + "sudo "
-        binary = binary + self.config.get('vzlist', 'vzlist')
+        binary = binary + self.main_config.get('vzlist', 'vzlist')
         return binary
 
     @lazy
@@ -348,41 +317,25 @@ class Master(object):
 
 
 def get_massagers():
-    def massage_veid(config, value):
-        return int(value)
+    massagers = []
 
-    def massage_sudo(config, value):
-        if value.lower() in ('true', 'yes', 'on'):
-            return True
-        elif value.lower() in ('false', 'no', 'off'):
-            return False
-        raise ValueError("Unknown value %s for sudo." % value)
+    sectiongroupname = 'vz-instance'
+    massagers.extend([
+        IntegerMassager(sectiongroupname, 'veid'),
+        UserMassager(sectiongroupname, 'user'),
+        PathMassager(sectiongroupname, 'fabfile'),
+        StartupScriptMassager(sectiongroupname, 'startup_script')])
 
-    def massage_debug_commands(config, value):
-        if value.lower() in ('true', 'yes', 'on'):
-            return True
-        elif value.lower() in ('false', 'no', 'off'):
-            return False
-        raise ValueError("Unknown value %s for debug-commands." % value)
+    sectiongroupname = 'vz-master'
+    massagers.extend([
+        UserMassager(sectiongroupname, 'user'),
+        BooleanMassager(sectiongroupname, 'sudo'),
+        BooleanMassager(sectiongroupname, 'debug-commands')])
 
-    def massage_startup_script(config, value):
-        result = dict()
-        if value.startswith('gzip:'):
-            value = value[5:]
-            result['gzip'] = True
-        if not os.path.isabs(value):
-            value = os.path.join(config.path, value)
-        result['path'] = value
-        return result
-
-    return {
-        ('vz-master', 'sudo'): massage_sudo,
-        ('vz-master', 'debug-commands'): massage_debug_commands,
-        ('vz-instance', 'veid'): massage_veid,
-        ('vz-instance', 'startup_script'): massage_startup_script}
+    return massagers
 
 
-def get_masters(config):
-    masters = config.get('vz-master', {})
-    for master in masters:
-        yield Master(config, master)
+def get_masters(main_config):
+    masters = main_config.get('vz-master', {})
+    for master, master_config in masters.iteritems():
+        yield Master(main_config, master, master_config)
