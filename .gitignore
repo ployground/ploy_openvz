@@ -1,0 +1,7 @@
+/.coverage
+/.mr.developer.cfg
+/bin
+/coverage
+/coverage.ini
+/develop-eggs
+dist
