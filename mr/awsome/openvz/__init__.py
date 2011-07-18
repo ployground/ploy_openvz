@@ -29,15 +29,20 @@ class Instance(PlainInstance, StartupScriptMixin):
     def vzlist(self, **kwargs):
         try:
             return self.master.vzlist(**kwargs)
-        except ValueError as e:
-            if e.args[0] == "VE not found":
-                log.info("Instance unavailable")
-                return
-            log.error(e.args[0])
+        except ValueError:
+            log.exception("Error in vzlist")
             sys.exit(1)
 
     def status(self):
-        status = self.vzlist(veid=self.config['veid'])
+        try:
+            veid = self.config['veid']
+        except:
+            log.error("No veid set in vz-instance:%s.", self.id)
+            sys.exit(1)
+        status = self.vzlist(veid=veid)
+        if status is None:
+            log.info("Instance unavailable")
+            return
         if status['status'] != 'running':
             log.info("Instance state: %s", status['status'])
             return
@@ -192,7 +197,7 @@ class Master(BaseMaster):
             user, host, port, client, known_hosts = self.instance.init_ssh_key()
         except SSHException, e:
             log.error("Couldn't connect to vz-master:%s." % self.id)
-            log.error(e)
+            log.error(unicode(e))
             sys.exit(1)
         return client
 
@@ -294,7 +299,7 @@ class Master(BaseMaster):
             cmd = '-a -o %s %s' % (','.join(info), veid)
             out, err = self._vzlist(cmd)
             err = err.strip()
-        if err == 'Container(s) not found':
+        if err in ('Container(s) not found', 'VE not found'):
             if veid is None:
                 return {}
             else:
