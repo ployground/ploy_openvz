@@ -16,5 +16,6 @@ setup(
     install_requires=[
         'setuptools',
         'Fabric >= 0.9.0',
+        'lazy'
     ],
 )
