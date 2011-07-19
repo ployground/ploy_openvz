@@ -1,6 +1,7 @@
 from lazy import lazy
 from mr.awsome.common import BaseMaster, StartupScriptMixin
-from mr.awsome.config import BooleanMassager, IntegerMassager, PathMassager
+from mr.awsome.config import BaseMassager, BooleanMassager
+from mr.awsome.config import IntegerMassager, PathMassager
 from mr.awsome.config import StartupScriptMassager, UserMassager
 from mr.awsome.plain import Instance as PlainInstance
 import logging
@@ -50,16 +51,25 @@ class Instance(PlainInstance, StartupScriptMixin):
         log.info("Instances host name %s", status['hostname'])
         log.info("Instances ip address %s", status['ip'])
 
+    def log_cmd_output(self, out, err):
+        if out:
+            for line in out.split('\n'):
+                log.info(line)
+        if err:
+            for line in err.split('\n'):
+                log.info(line)
+
     def start(self, overrides=None):
-        status = self.vzlist(veid=self.config['veid'])
+        veid = self.config['veid']
+        status = self.vzlist(veid=veid)
         create = False
         if status is None:
             create = True
-            log.info("Creating instance '%s'", self.config['veid'])
+            log.info("Creating instance '%s'", veid)
             try:
                 self.master.vzctl(
                     'create',
-                    self.config['veid'],
+                    veid,
                     ip=self.config['ip'],
                     hostname=self.config['hostname'],
                     ostemplate=self.config['ostemplate'])
@@ -77,16 +87,49 @@ class Instance(PlainInstance, StartupScriptMixin):
             if key.startswith('set-'):
                 options[key] = self.config[key]
         if options:
-            self.master.vzctl('set', self.config['veid'], save=True, **options)
-        log.info("Starting instance '%s'", self.config['veid'])
-        self.master.vzctl('start', self.config['veid'])
+            self.master.vzctl('set', veid, save=True, **options)
+        mounts = self.config.get('mounts', [])
+        if mounts:
+            log.info("Setting up mounts for instance '%s'", veid)
+            mount_script = [
+                '#!/bin/bash',
+                '. /etc/vz/vz.conf',
+                '. ${VE_CONFFILE}']
+            for mount in mounts:
+                opts = dict(
+                    src=mount['src'].format(veid=veid).replace('"', '\\"'),
+                    dst=mount['dst'].format(veid=veid).replace('"', '\\"'))
+                if mount.get('create', False):
+                    mount_script.append(
+                        'test ! -e "{src}" && mkdir "{src}"'.format(**opts))
+                mount_script.append(
+                    'test ! -e ${{VE_ROOT}}"{dst}" && mkdir ${{VE_ROOT}}"{dst}"'.format(**opts))
+                mount_script.append(
+                    'mount -n -t simfs "{src}" ${{VE_ROOT}}"{dst}" -o "{src}"'.format(**opts))
+            mount_script.append('')
+            mount_script = '\n'.join(mount_script)
+            mount_script_filename = '/etc/vz/conf/%s.mount' % veid
+            cmd_fmt = 'bash -c "echo -e \\"{script}\\" | base64 -d > {filename}"'
+            cmd = cmd_fmt.format(
+                filename=mount_script_filename,
+                script=mount_script.encode('base64').replace('\n', '\\n'))
+            out, err = self.master._exec(
+                self.master.binary_prefix + cmd,
+                debug=self.master.debug)
+            self.log_cmd_output(out, err)
+            out, err = self.master._exec(
+                self.master.binary_prefix + 'chmod 0700 %s' % mount_script_filename,
+                debug=self.master.debug)
+            self.log_cmd_output(out, err)
+        log.info("Starting instance '%s'", veid)
+        self.master.vzctl('start', veid)
         startup_script = self.startup_script(overrides=overrides)
         if create and startup_script:
             log.info("Instance started, waiting until it's available")
             for i in range(60):
                 sys.stdout.write(".")
                 sys.stdout.flush()
-                out, err = self.master.vzctl('exec', self.config['veid'], cmd="runlevel")
+                out, err = self.master.vzctl('exec', veid, cmd="runlevel")
                 if not out.startswith("unknown"):
                     break
                 time.sleep(5)
@@ -100,7 +143,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             cmd = cmd_fmt % startup_script.encode('base64')
             out, err = self.master.vzctl(
                 'exec',
-                self.config['veid'],
+                veid,
                 cmd=cmd)
             if out:
                 for line in out.split('\n'):
@@ -110,7 +153,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                     log.info(line)
             out, err = self.master.vzctl(
                 'exec',
-                self.config['veid'],
+                veid,
                 cmd='chmod 0700 /etc/startup_script')
             if out:
                 for line in out.split('\n'):
@@ -120,7 +163,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                     log.info(line)
             out, err = self.master.vzctl(
                 'exec',
-                self.config['veid'],
+                veid,
                 cmd='/etc/startup_script &')
             if out:
                 for line in out.split('\n'):
@@ -175,19 +218,19 @@ class Master(BaseMaster):
         self.debug = self.master_config.get('debug-commands', False)
 
     @lazy
+    def binary_prefix(self):
+        if self.master_config.get('sudo'):
+            return "sudo "
+        return ""
+
+    @lazy
     def vzctl_binary(self):
-        binary = ""
-        if self.main_config.get('sudo'):
-            binary = binary + "sudo "
-        binary = binary + self.main_config.get('vzctl', 'vzctl')
+        binary = self.binary_prefix + self.master_config.get('vzctl', 'vzctl')
         return binary
 
     @lazy
     def vzlist_binary(self):
-        binary = ""
-        if self.main_config.get('sudo'):
-            binary = binary + "sudo "
-        binary = binary + self.main_config.get('vzlist', 'vzlist')
+        binary = self.binary_prefix + self.master_config.get('vzlist', 'vzlist')
         return binary
 
     @lazy
@@ -267,7 +310,12 @@ class Master(BaseMaster):
 
     @lazy
     def vzlist_options(self):
-        out, err = self._exec("%s -L" % self.vzlist_binary)
+        out, err = self._exec("%s -L" % self.vzlist_binary, self.debug)
+        err = err.strip()
+        if 'vzlist: command not found' in err:
+            for line in err.split('\n'):
+                log.error(line)
+            sys.exit(1)
         header_map = {}
         option_map = {}
         for line in out.split('\n'):
@@ -321,6 +369,27 @@ class Master(BaseMaster):
         return results
 
 
+class MountsMassager(BaseMassager):
+    def __call__(self, main_config, sectionname):
+        value = main_config[self.sectiongroupname][sectionname][self.key]
+        mounts = []
+        for line in value.split('\n'):
+            mount_options = line.split()
+            if not len(mount_options):
+                continue
+            options = {}
+            for mount_option in mount_options:
+                (key, value) = mount_option.split('=')
+                (key, value) = (key.strip(), value.strip())
+                if key == 'create':
+                    if value.lower() in ('yes', 'true', '1', 'on'):
+                        options[key] = True
+                else:
+                    options[key] = value
+            mounts.append(options)
+        return tuple(mounts)
+
+
 def get_massagers():
     massagers = []
 
@@ -329,6 +398,7 @@ def get_massagers():
         IntegerMassager(sectiongroupname, 'veid'),
         UserMassager(sectiongroupname, 'user'),
         PathMassager(sectiongroupname, 'fabfile'),
+        MountsMassager(sectiongroupname, 'mounts'),
         StartupScriptMassager(sectiongroupname, 'startup_script')])
 
     sectiongroupname = 'vz-master'
