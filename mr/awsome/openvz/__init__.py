@@ -188,7 +188,11 @@ class Instance(PlainInstance, StartupScriptMixin):
         log.info("Instance stopped")
 
     def terminate(self):
-        status = self.vzlist(veid=self.config['veid'])
+        veid = self.config['veid']
+        if self.config.get('no-terminate', False):
+            log.error("Instance '%s' (%s) is configured not to be terminated.", self.id, veid)
+            return
+        status = self.vzlist(veid=veid)
         if status is None:
             return
         if status['status'] == 'running':
@@ -399,6 +403,7 @@ def get_massagers():
     massagers.extend([
         IntegerMassager(sectiongroupname, 'veid'),
         UserMassager(sectiongroupname, 'user'),
+        BooleanMassager(sectiongroupname, 'no-terminate'),
         PathMassager(sectiongroupname, 'fabfile'),
         MountsMassager(sectiongroupname, 'mounts'),
         StartupScriptMassager(sectiongroupname, 'startup_script')])
