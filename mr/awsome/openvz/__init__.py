@@ -414,6 +414,7 @@ def get_massagers():
     sectiongroupname = 'vz-master'
     massagers.extend([
         UserMassager(sectiongroupname, 'user'),
+        PathMassager(sectiongroupname, 'fabfile'),
         BooleanMassager(sectiongroupname, 'sudo'),
         BooleanMassager(sectiongroupname, 'debug-commands')])
 
