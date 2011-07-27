@@ -42,7 +42,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             sys.exit(1)
         status = self.vzlist(veid=veid)
         if status is None:
-            log.info("Instance unavailable")
+            log.info("Instance '%s' (%s) unavailable", self.id, veid)
             return
         if status['status'] != 'running':
             log.info("Instance state: %s", status['status'])
@@ -176,15 +176,17 @@ class Instance(PlainInstance, StartupScriptMixin):
         return True
 
     def stop(self):
-        status = self.vzlist(veid=self.config['veid'])
+        veid = self.config['veid']
+        status = self.vzlist(veid=veid)
         if status is None:
+            log.info("Instance '%s' (%s) unavailable", self.id, veid)
             return
         if status['status'] != 'running':
             log.info("Instance state: %s", status['status'])
             log.info("Instance not stopped")
             return
-        log.info("Stopping instance '%s'", self.config['veid'])
-        self.master.vzctl('stop', self.config['veid'])
+        log.info("Stopping instance '%s'", veid)
+        self.master.vzctl('stop', veid)
         log.info("Instance stopped")
 
     def terminate(self):
@@ -194,12 +196,13 @@ class Instance(PlainInstance, StartupScriptMixin):
             return
         status = self.vzlist(veid=veid)
         if status is None:
+            log.info("Instance '%s' (%s) unavailable", self.id, veid)
             return
         if status['status'] == 'running':
-            log.info("Stopping instance '%s'", self.config['veid'])
-            self.master.vzctl('stop', self.config['veid'])
+            log.info("Stopping instance '%s'", veid)
+            self.master.vzctl('stop', veid)
             log.info("Instance stopped")
-        status = self.vzlist(veid=self.config['veid'])
+        status = self.vzlist(veid=veid)
         if status is None:
             log.error("Unknown instance status")
             log.info("Instance not stopped")
@@ -207,8 +210,8 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instance state: %s", status['status'])
             log.info("Instance not stopped")
             return
-        log.info("Terminating instance '%s'", self.config['veid'])
-        self.master.vzctl('destroy', self.config['veid'])
+        log.info("Terminating instance '%s' (%s)", self.id, veid)
+        self.master.vzctl('destroy', veid)
         log.info("Instance terminated")
 
 

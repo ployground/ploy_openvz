@@ -253,7 +253,7 @@ class OpenVZTests(TestCase):
                 self.fail("SystemExit raised")
         self.assertEquals(
             LogMock.info.call_args_list, [
-                (('Instance unavailable',), {})])
+                (("Instance '%s' (%s) unavailable", 'foo', 101), {})])
 
     def testUnkownContainer(self):
         self._write_config('\n'.join([
@@ -272,7 +272,7 @@ class OpenVZTests(TestCase):
                 self.fail("SystemExit raised")
         self.assertEquals(
             LogMock.info.call_args_list, [
-                (('Instance unavailable',), {})])
+                (("Instance '%s' (%s) unavailable", 'foo', 101), {})])
 
     def testFoo(self):
         self._write_config('\n'.join([
