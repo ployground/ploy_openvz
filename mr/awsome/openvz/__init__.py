@@ -215,6 +215,8 @@ class Master(BaseMaster):
     def __init__(self, *args, **kwargs):
         BaseMaster.__init__(self, *args, **kwargs)
         self.instance = PlainInstance(self, self.id, self.master_config)
+        self.instance.sectiongroupname = 'vz-master'
+        self.instances[self.id] = self.instance
         self.debug = self.master_config.get('debug-commands', False)
 
     @lazy
