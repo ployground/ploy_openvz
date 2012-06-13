@@ -78,17 +78,17 @@ class Instance(PlainInstance, StartupScriptMixin):
                 for line in e.args[0].split('\n'):
                     log.error(line)
                 sys.exit(1)
-        else:
-            if status['status'] != 'stopped':
-                log.info("Instance state: %s", status['status'])
-                log.info("Instance already started")
-                return True
         options = {}
         for key in self.config:
             if key.startswith('set-'):
                 options[key] = self.config[key]
         if options:
+            log.info("Setting options")
             self.master.vzctl('set', veid, save=True, **options)
+        if status['status'] != 'stopped':
+            log.info("Instance state: %s", status['status'])
+            log.info("Instance already started")
+            return True
         mounts = self.config.get('mounts', [])
         if mounts:
             log.info("Setting up mounts for instance '%s'", veid)
