@@ -288,11 +288,17 @@ class Master(BaseMaster):
                 'filesystem': out[3],
                 'status': out[4]}
         elif command == 'start':
-            self._vzctl('start %s' % veid)
+            out, err = self._vzctl('start %s' % veid)
+            if err:
+                raise OpenVZError(err.strip())
         elif command == 'stop':
-            self._vzctl('stop %s' % veid)
+            out, err = self._vzctl('stop %s' % veid)
+            if err:
+                raise OpenVZError(err.strip())
         elif command == 'destroy':
-            self._vzctl('destroy %s' % veid)
+            out, err = self._vzctl('destroy %s' % veid)
+            if err:
+                raise OpenVZError(err.strip())
         elif command == 'set':
             options = []
             if 'save' in kwargs and kwargs['save']:
@@ -374,7 +380,7 @@ class Master(BaseMaster):
             results[values[veid_option]] = values
             del values[veid_option]
         if veid is not None:
-            return results[str(veid)]
+            return results.get(str(veid))
         return results
 
 
