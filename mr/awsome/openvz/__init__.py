@@ -65,6 +65,7 @@ class Instance(PlainInstance, StartupScriptMixin):
         create = False
         if status is None:
             create = True
+            startup_script = self.startup_script(overrides=overrides)
             log.info("Creating instance '%s'", veid)
             try:
                 self.master.vzctl(
@@ -123,7 +124,6 @@ class Instance(PlainInstance, StartupScriptMixin):
             self.log_cmd_output(out, err)
         log.info("Starting instance '%s'", veid)
         self.master.vzctl('start', veid)
-        startup_script = self.startup_script(overrides=overrides)
         if create and startup_script:
             log.info("Instance started, waiting until it's available")
             for i in range(60):
