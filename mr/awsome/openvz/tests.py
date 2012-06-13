@@ -130,9 +130,9 @@ class OpenVZSetupTests(TestCase):
     def setUp(self):
         self.directory = tempfile.mkdtemp()
         self.aws = AWS(self.directory)
-        self._ssh_client_mock = patch("paramiko.SSHClient")
+        self._ssh_client_mock = patch("ssh.SSHClient")
         self.ssh_client_mock = self._ssh_client_mock.start()
-        self._ssh_config_mock = patch("paramiko.SSHConfig")
+        self._ssh_config_mock = patch("ssh.SSHConfig")
         self.ssh_config_mock = self._ssh_config_mock.start()
         self.ssh_config_mock().lookup.return_value = {}
         self._subprocess_call_mock = patch("subprocess.call")
@@ -197,7 +197,7 @@ class OpenVZTests(TestCase):
     def setUp(self):
         self.directory = tempfile.mkdtemp()
         self.aws = AWS(self.directory)
-        self._ssh_client_mock = patch("paramiko.SSHClient")
+        self._ssh_client_mock = patch("ssh.SSHClient")
         self.ssh_client_mock = self._ssh_client_mock.start()
         self.ssh_client_exec_results = []
         def exec_command(cmd):
@@ -209,7 +209,7 @@ class OpenVZTests(TestCase):
             self.assertEquals(cmd, result[0], 'expected command mismatch')
             return None, StringIO(result[1][0]), StringIO(result[1][1])
         self.ssh_client_mock().exec_command.side_effect = exec_command
-        self._ssh_config_mock = patch("paramiko.SSHConfig")
+        self._ssh_config_mock = patch("ssh.SSHConfig")
         self.ssh_config_mock = self._ssh_config_mock.start()
         self.ssh_config_mock().lookup.return_value = {}
         self._subprocess_call_mock = patch("subprocess.call")

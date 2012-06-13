@@ -15,7 +15,7 @@ setup(
     namespace_packages=['mr'],
     install_requires=[
         'setuptools',
-        'Fabric >= 0.9.0',
+        'Fabric >= 1.3.0',
         'lazy'
     ],
 )

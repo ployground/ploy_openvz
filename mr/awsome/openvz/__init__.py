@@ -244,7 +244,7 @@ class Master(BaseMaster):
 
     @lazy
     def conn(self):
-        from paramiko import SSHException
+        from ssh import SSHException
         try:
             user, host, port, client, known_hosts = self.instance.init_ssh_key()
         except SSHException, e:
