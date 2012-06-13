@@ -94,8 +94,8 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Setting up mounts for instance '%s'", veid)
             mount_script = [
                 '#!/bin/bash',
-                '. /etc/vz/vz.conf',
-                '. ${VE_CONFFILE}']
+                'source /etc/vz/vz.conf',
+                'source ${VE_CONFFILE}']
             for mount in mounts:
                 opts = dict(
                     src=mount['src'].format(veid=veid).replace('"', '\\"'),
