@@ -78,6 +78,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                 for line in e.args[0].split('\n'):
                     log.error(line)
                 sys.exit(1)
+            status = self.vzlist(veid=veid)
         options = {}
         for key in self.config:
             if key.startswith('set-'):
