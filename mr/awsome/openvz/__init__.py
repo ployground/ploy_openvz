@@ -20,7 +20,7 @@ class Instance(PlainInstance, StartupScriptMixin):
     sectiongroupname = 'vz-instance'
 
     def get_host(self):
-        return self.config['ip']
+        return self.config.get('host', self.config['ip'])
 
     def get_fingerprint(self):
         out, err = self.master.vzctl('exec', self.config['veid'], cmd='ssh-keygen -lf /etc/ssh/ssh_host_rsa_key.pub')
