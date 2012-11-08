@@ -251,12 +251,12 @@ class Master(BaseMaster):
         except ImportError:
             from ssh import SSHException
         try:
-            user, host, port, client, known_hosts = self.instance.init_ssh_key()
+            ssh_info = self.instance.init_ssh_key()
         except SSHException, e:
             log.error("Couldn't connect to vz-master:%s." % self.id)
             log.error(unicode(e))
             sys.exit(1)
-        return client
+        return ssh_info['client']
 
     def _exec(self, cmd, debug=False):
         if debug:
