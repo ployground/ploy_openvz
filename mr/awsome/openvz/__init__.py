@@ -245,7 +245,11 @@ class Master(BaseMaster):
 
     @lazy
     def conn(self):
-        from ssh import SSHException
+        try:
+            from paramiko import SSHException
+            SSHException  # shutup pyflakes
+        except ImportError:
+            from ssh import SSHException
         try:
             user, host, port, client, known_hosts = self.instance.init_ssh_key()
         except SSHException, e:
