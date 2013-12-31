@@ -18,4 +18,7 @@ setup(
         'Fabric >= 1.3.0',
         'lazy'
     ],
-)
+    entry_points="""
+      [mr.awsome.providerplugins]
+      vz = mr.awsome.openvz:providerplugin
+    """)
