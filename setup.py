@@ -19,6 +19,6 @@ setup(
         'lazy'
     ],
     entry_points="""
-      [mr.awsome.providerplugins]
-      vz = mr.awsome.openvz:providerplugin
+      [mr.awsome.plugins]
+      vz = mr.awsome.openvz:plugin
     """)
