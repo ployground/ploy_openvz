@@ -135,12 +135,12 @@ class OpenVZSetupTests(TestCase):
         self._ssh_config_mock = patch("ssh.SSHConfig")
         self.ssh_config_mock = self._ssh_config_mock.start()
         self.ssh_config_mock().lookup.return_value = {}
-        self._subprocess_call_mock = patch("subprocess.call")
-        self.subprocess_call_mock = self._subprocess_call_mock.start()
+        self._os_execvp_mock = patch("os.execvp")
+        self.os_execvp_mock = self._os_execvp_mock.start()
 
     def tearDown(self):
-        self.subprocess_call_mock = self._subprocess_call_mock.stop()
-        del self.subprocess_call_mock
+        self.os_execvp_mock = self._os_execvp_mock.stop()
+        del self.os_execvp_mock
         self.ssh_config_mock = self._ssh_config_mock.stop()
         del self.ssh_config_mock
         self.ssh_client_mock = self._ssh_client_mock.stop()
@@ -212,12 +212,12 @@ class OpenVZTests(TestCase):
         self._ssh_config_mock = patch("ssh.SSHConfig")
         self.ssh_config_mock = self._ssh_config_mock.start()
         self.ssh_config_mock().lookup.return_value = {}
-        self._subprocess_call_mock = patch("subprocess.call")
-        self.subprocess_call_mock = self._subprocess_call_mock.start()
+        self._os_execvp_mock = patch("subprocess.call")
+        self.os_execvp_mock = self._os_execvp_mock.start()
 
     def tearDown(self):
-        self.subprocess_call_mock = self._subprocess_call_mock.stop()
-        del self.subprocess_call_mock
+        self.os_execvp_mock = self._os_execvp_mock.stop()
+        del self.os_execvp_mock
         self.ssh_config_mock = self._ssh_config_mock.stop()
         del self.ssh_config_mock
         self.ssh_client_mock = self._ssh_client_mock.stop()
