@@ -437,10 +437,10 @@ def get_massagers():
     return massagers
 
 
-def get_masters(main_config):
-    masters = main_config.get('vz-master', {})
+def get_masters(aws):
+    masters = aws.config.get('vz-master', {})
     for master, master_config in masters.iteritems():
-        yield Master(main_config, master, master_config)
+        yield Master(aws, master, master_config)
 
 
 plugin = dict(
