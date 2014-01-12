@@ -226,6 +226,7 @@ class Master(BaseMaster):
         self.instance.sectiongroupname = 'vz-master'
         self.instances[self.id] = self.instance
         self.debug = self.master_config.get('debug-commands', False)
+        self._conn = None
 
     @lazy
     def binary_prefix(self):
@@ -243,8 +244,11 @@ class Master(BaseMaster):
         binary = self.binary_prefix + self.master_config.get('vzlist', 'vzlist')
         return binary
 
-    @lazy
+    @property
     def conn(self):
+        if self._conn is not None:
+            if self._conn.get_transport() is not None:
+                return self._conn
         try:
             from paramiko import SSHException
             SSHException  # shutup pyflakes
@@ -256,7 +260,8 @@ class Master(BaseMaster):
             log.error("Couldn't connect to vz-master:%s." % self.id)
             log.error(unicode(e))
             sys.exit(1)
-        return ssh_info['client']
+        self._conn = ssh_info['client']
+        return self._conn
 
     def _exec(self, cmd, debug=False):
         if debug:
