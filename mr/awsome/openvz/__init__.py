@@ -3,6 +3,7 @@ from mr.awsome.common import BaseMaster, StartupScriptMixin
 from mr.awsome.config import BaseMassager, BooleanMassager
 from mr.awsome.config import IntegerMassager, PathMassager
 from mr.awsome.config import StartupScriptMassager, UserMassager
+from mr.awsome.config import value_asbool
 from mr.awsome.plain import Instance as PlainInstance
 import logging
 import sys
@@ -379,8 +380,8 @@ class Master(BaseMaster):
 
 
 class MountsMassager(BaseMassager):
-    def __call__(self, main_config, sectionname):
-        value = main_config[self.sectiongroupname][sectionname][self.key]
+    def __call__(self, config, sectionname):
+        value = BaseMassager.__call__(self, config, sectionname)
         mounts = []
         for line in value.split('\n'):
             mount_options = line.split()
@@ -388,13 +389,15 @@ class MountsMassager(BaseMassager):
                 continue
             options = {}
             for mount_option in mount_options:
+                if '=' not in mount_option:
+                    raise ValueError("Mount option '%s' contains no equal sign." % mount_option)
                 (key, value) = mount_option.split('=')
                 (key, value) = (key.strip(), value.strip())
                 if key == 'create':
-                    if value.lower() in ('yes', 'true', '1', 'on'):
-                        options[key] = True
-                else:
-                    options[key] = value
+                    value = value_asbool(value)
+                    if value is None:
+                        raise ValueError("Unknown value %s for option %s in %s of %s:%s." % (value, key, self.key, self.sectiongroupname, sectionname))
+                options[key] = value
             mounts.append(options)
         return tuple(mounts)
 

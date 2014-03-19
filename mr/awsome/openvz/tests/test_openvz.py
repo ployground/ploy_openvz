@@ -1,8 +1,10 @@
 from StringIO import StringIO
 from mock import patch
 from mr.awsome import AWS
+from mr.awsome.config import Config
 from unittest2 import TestCase
 import os
+import pytest
 import tempfile
 import shutil
 
@@ -304,3 +306,46 @@ class OpenVZTests(TestCase):
                 (('Instance running.',), {}),
                 (('Instances host name %s', 'foo.example.com'), {}),
                 (('Instances ip address %s', '10.0.0.1'), {})])
+
+
+class DummyPlugin(object):
+    def __init__(self):
+        self.massagers = []
+
+    def get_massagers(self):
+        return self.massagers
+
+
+def test_mounts_massager_invalid_option():
+    from mr.awsome.openvz import MountsMassager
+    dummyplugin = DummyPlugin()
+    plugins = dict(
+        dummy=dict(
+            get_massagers=dummyplugin.get_massagers))
+    dummyplugin.massagers.append(MountsMassager('section', 'mounts'))
+    contents = StringIO("\n".join([
+        "[section:foo]",
+        "mounts = 1"]))
+    config = Config(contents, plugins=plugins).parse()
+    with pytest.raises(ValueError) as e:
+        config['section']['foo']['mounts']
+    assert e.value.args == ("Mount option '1' contains no equal sign.",)
+
+
+def test_mounts_massager():
+    from mr.awsome.openvz import MountsMassager
+    dummyplugin = DummyPlugin()
+    plugins = dict(
+        dummy=dict(
+            get_massagers=dummyplugin.get_massagers))
+    dummyplugin.massagers.append(MountsMassager('section', 'mounts'))
+    contents = StringIO("\n".join([
+        "[section:foo]",
+        "mounts = src=foo create=no"]))
+    config = Config(contents, plugins=plugins).parse()
+    assert config['section'] == {
+        'foo': {
+            'mounts': (
+                {
+                    'src': 'foo',
+                    'create': False},)}}
