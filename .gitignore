@@ -1,7 +1,6 @@
+/.cache/
 /.coverage
-/.mr.developer.cfg
-/bin
-/coverage
-/coverage.ini
-/develop-eggs
-dist
+/.tox/
+/htmlcov/
+/setuptools_git-*.egg
+

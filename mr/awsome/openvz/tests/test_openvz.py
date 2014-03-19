@@ -7,132 +7,138 @@ import tempfile
 import shutil
 
 
-vzlist_output = """\
-veid            VEID           
-vpsid           VEID           
-hostname        HOSTNAME       
-name            NAME           
-ip              IP_ADDR        
-status          STATUS         
-kmemsize        KMEMSIZE       
-kmemsize.m      KMEMSIZE.M     
-kmemsize.b      KMEMSIZE.B     
-kmemsize.l      KMEMSIZE.L     
-kmemsize.f      KMEMSIZE.F     
-lockedpages     LOCKEDP        
-lockedpages.m   LOCKEDP.M      
-lockedpages.b   LOCKEDP.B      
-lockedpages.l   LOCKEDP.L      
-lockedpages.f   LOCKEDP.F      
-privvmpages     PRIVVMP        
-privvmpages.m   PRIVVMP.M      
-privvmpages.b   PRIVVMP.B      
-privvmpages.l   PRIVVMP.L      
-privvmpages.f   PRIVVMP.F      
-shmpages        SHMP           
-shmpages.m      SHMP.M         
-shmpages.b      SHMP.B         
-shmpages.l      SHMP.L         
-shmpages.f      SHMP.F         
-numproc         NPROC          
-numproc.m       NPROC.M        
-numproc.b       NPROC.B        
-numproc.l       NPROC.L        
-numproc.f       NPROC.F        
-physpages       PHYSP          
-physpages.m     PHYSP.M        
-physpages.b     PHYSP.B        
-physpages.l     PHYSP.L        
-physpages.f     PHYSP.F        
-vmguarpages     VMGUARP        
-vmguarpages.m   VMGUARP.M      
-vmguarpages.b   VMGUARP.B      
-vmguarpages.l   VMGUARP.L      
-vmguarpages.f   VMGUARP.F      
-oomguarpages    OOMGUARP       
-oomguarpages.m  OOMGUARP.M     
-oomguarpages.b  OOMGUARP.B     
-oomguarpages.l  OOMGUARP.L     
-oomguarpages.f  OOMGUARP.F     
-numtcpsock      NTCPSOCK       
-numtcpsock.m    NTCPSOCK.M     
-numtcpsock.b    NTCPSOCK.B     
-numtcpsock.l    NTCPSOCK.L     
-numtcpsock.f    NTCPSOCK.F     
-numflock        NFLOCK         
-numflock.m      NFLOCK.M       
-numflock.b      NFLOCK.B       
-numflock.l      NFLOCK.L       
-numflock.f      NFLOCK.F       
-numpty          NPTY           
-numpty.m        NPTY.M         
-numpty.b        NPTY.B         
-numpty.l        NPTY.L         
-numpty.f        NPTY.F         
-numsiginfo      NSIGINFO       
-numsiginfo.m    NSIGINFO.M     
-numsiginfo.b    NSIGINFO.B     
-numsiginfo.l    NSIGINFO.L     
-numsiginfo.f    NSIGINFO.F     
-tcpsndbuf       TCPSNDB        
-tcpsndbuf.m     TCPSNDB.M      
-tcpsndbuf.b     TCPSNDB.B      
-tcpsndbuf.l     TCPSNDB.L      
-tcpsndbuf.f     TCPSNDB.F      
-tcprcvbuf       TCPRCVB        
-tcprcvbuf.m     TCPRCVB.M      
-tcprcvbuf.b     TCPRCVB.B      
-tcprcvbuf.l     TCPRCVB.L      
-tcprcvbuf.f     TCPRCVB.F      
-othersockbuf    OTHSOCKB       
-othersockbuf.m  OTHSOCKB.M     
-othersockbuf.b  OTHSOCKB.B     
-othersockbuf.l  OTHSOCKB.L     
-othersockbuf.f  OTHSOCKB.F     
-dgramrcvbuf     DGRAMRB        
-dgramrcvbuf.m   DGRAMRB.M      
-dgramrcvbuf.b   DGRAMRB.B      
-dgramrcvbuf.l   DGRAMRB.L      
-dgramrcvbuf.f   DGRAMRB.F      
-numothersock    NOTHSOCK       
-numothersock.m  NOTHSOCK.M     
-numothersock.b  NOTHSOCK.B     
-numothersock.l  NOTHSOCK.L     
-numothersock.f  NOTHSOCK.F     
-dcachesize      DCACHESZ       
-dcachesize.m    DCACHESZ.M     
-dcachesize.b    DCACHESZ.B     
-dcachesize.l    DCACHESZ.L     
-dcachesize.f    DCACHESZ.F     
-numfile         NFILE          
-numfile.m       NFILE.M        
-numfile.b       NFILE.B        
-numfile.l       NFILE.L        
-numfile.f       NFILE.F        
-numiptent       NIPTENT        
-numiptent.m     NIPTENT.M      
-numiptent.b     NIPTENT.B      
-numiptent.l     NIPTENT.L      
-numiptent.f     NIPTENT.F      
-diskspace       DQBLOCKS       
-diskspace.s     DQBLOCKS.S     
-diskspace.h     DQBLOCKS.H     
-diskinodes      DQINODES       
-diskinodes.s    DQINODES.S     
-diskinodes.h    DQINODES.H     
-laverage        LAVERAGE       
-cpulimit        CPULIM         
-cpuunits        CPUUNI         
-"""
+vzlist_output = "\n".join([
+    "veid            VEID           ",
+    "vpsid           VEID           ",
+    "hostname        HOSTNAME       ",
+    "name            NAME           ",
+    "ip              IP_ADDR        ",
+    "status          STATUS         ",
+    "kmemsize        KMEMSIZE       ",
+    "kmemsize.m      KMEMSIZE.M     ",
+    "kmemsize.b      KMEMSIZE.B     ",
+    "kmemsize.l      KMEMSIZE.L     ",
+    "kmemsize.f      KMEMSIZE.F     ",
+    "lockedpages     LOCKEDP        ",
+    "lockedpages.m   LOCKEDP.M      ",
+    "lockedpages.b   LOCKEDP.B      ",
+    "lockedpages.l   LOCKEDP.L      ",
+    "lockedpages.f   LOCKEDP.F      ",
+    "privvmpages     PRIVVMP        ",
+    "privvmpages.m   PRIVVMP.M      ",
+    "privvmpages.b   PRIVVMP.B      ",
+    "privvmpages.l   PRIVVMP.L      ",
+    "privvmpages.f   PRIVVMP.F      ",
+    "shmpages        SHMP           ",
+    "shmpages.m      SHMP.M         ",
+    "shmpages.b      SHMP.B         ",
+    "shmpages.l      SHMP.L         ",
+    "shmpages.f      SHMP.F         ",
+    "numproc         NPROC          ",
+    "numproc.m       NPROC.M        ",
+    "numproc.b       NPROC.B        ",
+    "numproc.l       NPROC.L        ",
+    "numproc.f       NPROC.F        ",
+    "physpages       PHYSP          ",
+    "physpages.m     PHYSP.M        ",
+    "physpages.b     PHYSP.B        ",
+    "physpages.l     PHYSP.L        ",
+    "physpages.f     PHYSP.F        ",
+    "vmguarpages     VMGUARP        ",
+    "vmguarpages.m   VMGUARP.M      ",
+    "vmguarpages.b   VMGUARP.B      ",
+    "vmguarpages.l   VMGUARP.L      ",
+    "vmguarpages.f   VMGUARP.F      ",
+    "oomguarpages    OOMGUARP       ",
+    "oomguarpages.m  OOMGUARP.M     ",
+    "oomguarpages.b  OOMGUARP.B     ",
+    "oomguarpages.l  OOMGUARP.L     ",
+    "oomguarpages.f  OOMGUARP.F     ",
+    "numtcpsock      NTCPSOCK       ",
+    "numtcpsock.m    NTCPSOCK.M     ",
+    "numtcpsock.b    NTCPSOCK.B     ",
+    "numtcpsock.l    NTCPSOCK.L     ",
+    "numtcpsock.f    NTCPSOCK.F     ",
+    "numflock        NFLOCK         ",
+    "numflock.m      NFLOCK.M       ",
+    "numflock.b      NFLOCK.B       ",
+    "numflock.l      NFLOCK.L       ",
+    "numflock.f      NFLOCK.F       ",
+    "numpty          NPTY           ",
+    "numpty.m        NPTY.M         ",
+    "numpty.b        NPTY.B         ",
+    "numpty.l        NPTY.L         ",
+    "numpty.f        NPTY.F         ",
+    "numsiginfo      NSIGINFO       ",
+    "numsiginfo.m    NSIGINFO.M     ",
+    "numsiginfo.b    NSIGINFO.B     ",
+    "numsiginfo.l    NSIGINFO.L     ",
+    "numsiginfo.f    NSIGINFO.F     ",
+    "tcpsndbuf       TCPSNDB        ",
+    "tcpsndbuf.m     TCPSNDB.M      ",
+    "tcpsndbuf.b     TCPSNDB.B      ",
+    "tcpsndbuf.l     TCPSNDB.L      ",
+    "tcpsndbuf.f     TCPSNDB.F      ",
+    "tcprcvbuf       TCPRCVB        ",
+    "tcprcvbuf.m     TCPRCVB.M      ",
+    "tcprcvbuf.b     TCPRCVB.B      ",
+    "tcprcvbuf.l     TCPRCVB.L      ",
+    "tcprcvbuf.f     TCPRCVB.F      ",
+    "othersockbuf    OTHSOCKB       ",
+    "othersockbuf.m  OTHSOCKB.M     ",
+    "othersockbuf.b  OTHSOCKB.B     ",
+    "othersockbuf.l  OTHSOCKB.L     ",
+    "othersockbuf.f  OTHSOCKB.F     ",
+    "dgramrcvbuf     DGRAMRB        ",
+    "dgramrcvbuf.m   DGRAMRB.M      ",
+    "dgramrcvbuf.b   DGRAMRB.B      ",
+    "dgramrcvbuf.l   DGRAMRB.L      ",
+    "dgramrcvbuf.f   DGRAMRB.F      ",
+    "numothersock    NOTHSOCK       ",
+    "numothersock.m  NOTHSOCK.M     ",
+    "numothersock.b  NOTHSOCK.B     ",
+    "numothersock.l  NOTHSOCK.L     ",
+    "numothersock.f  NOTHSOCK.F     ",
+    "dcachesize      DCACHESZ       ",
+    "dcachesize.m    DCACHESZ.M     ",
+    "dcachesize.b    DCACHESZ.B     ",
+    "dcachesize.l    DCACHESZ.L     ",
+    "dcachesize.f    DCACHESZ.F     ",
+    "numfile         NFILE          ",
+    "numfile.m       NFILE.M        ",
+    "numfile.b       NFILE.B        ",
+    "numfile.l       NFILE.L        ",
+    "numfile.f       NFILE.F        ",
+    "numiptent       NIPTENT        ",
+    "numiptent.m     NIPTENT.M      ",
+    "numiptent.b     NIPTENT.B      ",
+    "numiptent.l     NIPTENT.L      ",
+    "numiptent.f     NIPTENT.F      ",
+    "diskspace       DQBLOCKS       ",
+    "diskspace.s     DQBLOCKS.S     ",
+    "diskspace.h     DQBLOCKS.H     ",
+    "diskinodes      DQINODES       ",
+    "diskinodes.s    DQINODES.S     ",
+    "diskinodes.h    DQINODES.H     ",
+    "laverage        LAVERAGE       ",
+    "cpulimit        CPULIM         ",
+    "cpuunits        CPUUNI         "])
 
 
 class OpenVZSetupTests(TestCase):
     def setUp(self):
+        import mr.awsome.openvz
+        try:  # pragma: no cover - we support both
+            import paramiko
+            paramiko  # shutup pyflakes
+        except ImportError:  # pragma: no cover - we support both
+            import ssh as paramiko
         self.directory = tempfile.mkdtemp()
         self.aws = AWS(self.directory)
-        self._ssh_client_mock = patch("ssh.SSHClient")
+        self.aws.__dict__['plugins'] = {'vz': mr.awsome.openvz.plugin}
+        self._ssh_client_mock = patch("%s.SSHClient" % paramiko.__name__)
         self.ssh_client_mock = self._ssh_client_mock.start()
-        self._ssh_config_mock = patch("ssh.SSHConfig")
+        self._ssh_config_mock = patch("%s.SSHConfig" % paramiko.__name__)
         self.ssh_config_mock = self._ssh_config_mock.start()
         self.ssh_config_mock().lookup.return_value = {}
         self._os_execvp_mock = patch("os.execvp")
@@ -150,10 +156,6 @@ class OpenVZSetupTests(TestCase):
 
     def _write_config(self, content):
         with open(os.path.join(self.directory, 'aws.conf'), 'w') as f:
-            f.write('\n'.join([
-                '[plugin:vz]',
-                'module = mr.awsome.openvz']))
-            f.write('\n')
             f.write(content)
 
     def testNoVeid(self):
@@ -170,7 +172,7 @@ class OpenVZSetupTests(TestCase):
             '[vz-master:default]',
             '[vz-instance:foo]',
             'veid = 101']))
-        with patch('mr.awsome.openvz.log') as LogMock:
+        with patch('mr.awsome.plain.log') as LogMock:
             with self.assertRaises(SystemExit):
                 self.aws(['./bin/aws', 'status', 'foo'])
         self.assertEquals(
@@ -184,7 +186,7 @@ class OpenVZSetupTests(TestCase):
             'host = localhost',
             '[vz-instance:foo]',
             'veid = 101']))
-        with patch('mr.awsome.openvz.log') as LogMock:
+        with patch('mr.awsome.plain.log') as LogMock:
             with self.assertRaises(SystemExit):
                 self.aws(['./bin/aws', 'status', 'foo'])
         self.assertEquals(
@@ -195,21 +197,30 @@ class OpenVZSetupTests(TestCase):
 
 class OpenVZTests(TestCase):
     def setUp(self):
+        import mr.awsome.openvz
+        try:  # pragma: no cover - we support both
+            import paramiko
+            paramiko  # shutup pyflakes
+        except ImportError:  # pragma: no cover - we support both
+            import ssh as paramiko
         self.directory = tempfile.mkdtemp()
         self.aws = AWS(self.directory)
-        self._ssh_client_mock = patch("ssh.SSHClient")
+        self.aws.__dict__['plugins'] = {'vz': mr.awsome.openvz.plugin}
+        self._ssh_client_mock = patch("%s.SSHClient" % paramiko.__name__)
         self.ssh_client_mock = self._ssh_client_mock.start()
         self.ssh_client_exec_results = []
+
         def exec_command(cmd):
-            if len(self.ssh_client_exec_results) == 0: # pragma: no cover - only if test is wrong
+            if len(self.ssh_client_exec_results) == 0:  # pragma: no cover - only if test is wrong
                 self.fail("No results for exec_command, expected on for '%s'" % cmd)
             result = self.ssh_client_exec_results.pop(0)
-            if len(result) != 2 or len(result[1]) != 2: # pragma: no cover - only if test is wrong
+            if len(result) != 2 or len(result[1]) != 2:  # pragma: no cover - only if test is wrong
                 self.fail("ssh_client_exec_results needs to contain tuples in the form of (expected_cmd, (stdout, stderr)).")
             self.assertEquals(cmd, result[0], 'expected command mismatch')
             return None, StringIO(result[1][0]), StringIO(result[1][1])
+
         self.ssh_client_mock().exec_command.side_effect = exec_command
-        self._ssh_config_mock = patch("ssh.SSHConfig")
+        self._ssh_config_mock = patch("%s.SSHConfig" % paramiko.__name__)
         self.ssh_config_mock = self._ssh_config_mock.start()
         self.ssh_config_mock().lookup.return_value = {}
         self._os_execvp_mock = patch("subprocess.call")
@@ -228,8 +239,6 @@ class OpenVZTests(TestCase):
     def _write_config(self, content):
         with open(os.path.join(self.directory, 'aws.conf'), 'w') as f:
             f.write('\n'.join([
-                '[plugin:vz]',
-                'module = mr.awsome.openvz',
                 '[vz-master:default]',
                 'host = localhost',
                 'fingerprint = foo']))
@@ -249,7 +258,7 @@ class OpenVZTests(TestCase):
         with patch('mr.awsome.openvz.log') as LogMock:
             try:
                 self.aws(['./bin/aws', 'status', 'foo'])
-            except SystemExit: # pragma: no cover - only if something is wrong
+            except SystemExit:  # pragma: no cover - only if something is wrong
                 self.fail("SystemExit raised")
         self.assertEquals(
             LogMock.info.call_args_list, [
@@ -268,7 +277,7 @@ class OpenVZTests(TestCase):
         with patch('mr.awsome.openvz.log') as LogMock:
             try:
                 self.aws(['./bin/aws', 'status', 'foo'])
-            except SystemExit: # pragma: no cover - only if something is wrong
+            except SystemExit:  # pragma: no cover - only if something is wrong
                 self.fail("SystemExit raised")
         self.assertEquals(
             LogMock.info.call_args_list, [
@@ -288,7 +297,7 @@ class OpenVZTests(TestCase):
         with patch('mr.awsome.openvz.log') as LogMock:
             try:
                 self.aws(['./bin/aws', 'status', 'foo'])
-            except SystemExit: # pragma: no cover - only if something is wrong
+            except SystemExit:  # pragma: no cover - only if something is wrong
                 self.fail("SystemExit raised")
         self.assertEquals(
             LogMock.info.call_args_list, [
