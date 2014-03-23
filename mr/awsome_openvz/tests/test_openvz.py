@@ -129,7 +129,7 @@ vzlist_output = "\n".join([
 
 class OpenVZSetupTests(TestCase):
     def setUp(self):
-        import mr.awsome.openvz
+        import mr.awsome_openvz
         try:  # pragma: no cover - we support both
             import paramiko
             paramiko  # shutup pyflakes
@@ -137,7 +137,7 @@ class OpenVZSetupTests(TestCase):
             import ssh as paramiko
         self.directory = tempfile.mkdtemp()
         self.aws = AWS(self.directory)
-        self.aws.__dict__['plugins'] = {'vz': mr.awsome.openvz.plugin}
+        self.aws.__dict__['plugins'] = {'vz': mr.awsome_openvz.plugin}
         self._ssh_client_mock = patch("%s.SSHClient" % paramiko.__name__)
         self.ssh_client_mock = self._ssh_client_mock.start()
         self._ssh_config_mock = patch("%s.SSHConfig" % paramiko.__name__)
@@ -164,7 +164,7 @@ class OpenVZSetupTests(TestCase):
         self._write_config('\n'.join([
             '[vz-master:default]',
             '[vz-instance:foo]']))
-        with patch('mr.awsome.openvz.log') as LogMock:
+        with patch('mr.awsome_openvz.log') as LogMock:
             with self.assertRaises(SystemExit):
                 self.aws(['./bin/aws', 'status', 'foo'])
         LogMock.error.assert_called_with("No veid set in vz-instance:%s.", 'foo')
@@ -199,7 +199,7 @@ class OpenVZSetupTests(TestCase):
 
 class OpenVZTests(TestCase):
     def setUp(self):
-        import mr.awsome.openvz
+        import mr.awsome_openvz
         try:  # pragma: no cover - we support both
             import paramiko
             paramiko  # shutup pyflakes
@@ -207,7 +207,7 @@ class OpenVZTests(TestCase):
             import ssh as paramiko
         self.directory = tempfile.mkdtemp()
         self.aws = AWS(self.directory)
-        self.aws.__dict__['plugins'] = {'vz': mr.awsome.openvz.plugin}
+        self.aws.__dict__['plugins'] = {'vz': mr.awsome_openvz.plugin}
         self._ssh_client_mock = patch("%s.SSHClient" % paramiko.__name__)
         self.ssh_client_mock = self._ssh_client_mock.start()
         self.ssh_client_exec_results = []
@@ -257,7 +257,7 @@ class OpenVZTests(TestCase):
         self.ssh_client_exec_results.append((
             'vzlist -a -o status,ip,hostname,veid,name 101',
             ('', 'VE not found')))
-        with patch('mr.awsome.openvz.log') as LogMock:
+        with patch('mr.awsome_openvz.log') as LogMock:
             try:
                 self.aws(['./bin/aws', 'status', 'foo'])
             except SystemExit:  # pragma: no cover - only if something is wrong
@@ -276,7 +276,7 @@ class OpenVZTests(TestCase):
         self.ssh_client_exec_results.append((
             'vzlist -a -o status,ip,hostname,veid,name 101',
             ('', 'Container(s) not found')))
-        with patch('mr.awsome.openvz.log') as LogMock:
+        with patch('mr.awsome_openvz.log') as LogMock:
             try:
                 self.aws(['./bin/aws', 'status', 'foo'])
             except SystemExit:  # pragma: no cover - only if something is wrong
@@ -296,7 +296,7 @@ class OpenVZTests(TestCase):
             'vzlist -a -o status,ip,hostname,veid,name 101', (
                 "STATUS  IP_ADDR         HOSTNAME                               VEID NAME\n"
                 "running 10.0.0.1        foo.example.com                         101 -", '')))
-        with patch('mr.awsome.openvz.log') as LogMock:
+        with patch('mr.awsome_openvz.log') as LogMock:
             try:
                 self.aws(['./bin/aws', 'status', 'foo'])
             except SystemExit:  # pragma: no cover - only if something is wrong
@@ -317,7 +317,7 @@ class DummyPlugin(object):
 
 
 def test_mounts_massager_invalid_option():
-    from mr.awsome.openvz import MountsMassager
+    from mr.awsome_openvz import MountsMassager
     dummyplugin = DummyPlugin()
     plugins = dict(
         dummy=dict(
@@ -333,7 +333,7 @@ def test_mounts_massager_invalid_option():
 
 
 def test_mounts_massager():
-    from mr.awsome.openvz import MountsMassager
+    from mr.awsome_openvz import MountsMassager
     dummyplugin = DummyPlugin()
     plugins = dict(
         dummy=dict(

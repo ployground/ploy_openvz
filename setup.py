@@ -16,11 +16,11 @@ setup(
     install_requires=[
         'setuptools',
         'Fabric >= 1.3.0',
-        'lazy'
+        'mr.awsome >= 1.0dev',
     ],
     setup_requires=[
         'setuptools-git'],
     entry_points="""
         [mr.awsome.plugins]
-        vz = mr.awsome.openvz:plugin
+        vz = mr.awsome_openvz:plugin
     """)
