@@ -255,7 +255,7 @@ class OpenVZTests(TestCase):
             'vzlist -L',
             (vzlist_output, '')))
         self.ssh_client_exec_results.append((
-            'vzlist -a -o status,ip,hostname,veid,name 101',
+            'vzlist -a -o hostname,ip,name,status,veid 101',
             ('', 'VE not found')))
         with patch('mr.awsome_openvz.log') as LogMock:
             try:
@@ -274,7 +274,7 @@ class OpenVZTests(TestCase):
             'vzlist -L',
             (vzlist_output, '')))
         self.ssh_client_exec_results.append((
-            'vzlist -a -o status,ip,hostname,veid,name 101',
+            'vzlist -a -o hostname,ip,name,status,veid 101',
             ('', 'Container(s) not found')))
         with patch('mr.awsome_openvz.log') as LogMock:
             try:
@@ -293,7 +293,7 @@ class OpenVZTests(TestCase):
             'vzlist -L',
             (vzlist_output, '')))
         self.ssh_client_exec_results.append((
-            'vzlist -a -o status,ip,hostname,veid,name 101', (
+            'vzlist -a -o hostname,ip,name,status,veid 101', (
                 "STATUS  IP_ADDR         HOSTNAME                               VEID NAME\n"
                 "running 10.0.0.1        foo.example.com                         101 -", '')))
         with patch('mr.awsome_openvz.log') as LogMock:

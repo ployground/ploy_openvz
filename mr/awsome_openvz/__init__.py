@@ -350,11 +350,11 @@ class Master(BaseMaster):
         if unknown:
             raise ValueError("Unknown options in vzlist call: %s" % ", ".join(unknown))
         if veid is None:
-            cmd = '-a -o %s' % ','.join(info)
+            cmd = '-a -o %s' % ','.join(sorted(info))
             out, err = self._vzlist(cmd)
             err = err.strip()
         else:
-            cmd = '-a -o %s %s' % (','.join(info), veid)
+            cmd = '-a -o %s %s' % (','.join(sorted(info)), veid)
             out, err = self._vzlist(cmd)
             err = err.strip()
         if err in ('Container(s) not found', 'VE not found'):
