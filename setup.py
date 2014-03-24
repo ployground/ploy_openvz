@@ -17,7 +17,7 @@ setup(
         'setuptools',
         'Fabric >= 1.3.0',
         'mr.awsome >= 1.0dev',
-    ],
+        'lazy'],
     setup_requires=[
         'setuptools-git'],
     entry_points="""
