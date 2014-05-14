@@ -23,8 +23,7 @@ setup(
     namespace_packages=['mr'],
     install_requires=[
         'setuptools',
-        'Fabric >= 1.3.0',
-        'mr.awsome >= 1.0dev',
+        'mr.awsome >= 1.0rc2',
         'lazy'],
     entry_points="""
         [mr.awsome.plugins]
