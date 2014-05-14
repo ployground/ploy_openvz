@@ -1,7 +1,7 @@
 from lazy import lazy
 from mr.awsome.common import BaseMaster, StartupScriptMixin
 from mr.awsome.config import BaseMassager, BooleanMassager
-from mr.awsome.config import IntegerMassager, PathMassager
+from mr.awsome.config import IntegerMassager
 from mr.awsome.config import StartupScriptMassager, UserMassager
 from mr.awsome.config import value_asbool
 from mr.awsome.plain import Instance as PlainInstance
@@ -410,14 +410,12 @@ def get_massagers():
         IntegerMassager(sectiongroupname, 'veid'),
         UserMassager(sectiongroupname, 'user'),
         BooleanMassager(sectiongroupname, 'no-terminate'),
-        PathMassager(sectiongroupname, 'fabfile'),
         MountsMassager(sectiongroupname, 'mounts'),
         StartupScriptMassager(sectiongroupname, 'startup_script')])
 
     sectiongroupname = 'vz-master'
     massagers.extend([
         UserMassager(sectiongroupname, 'user'),
-        PathMassager(sectiongroupname, 'fabfile'),
         BooleanMassager(sectiongroupname, 'sudo'),
         BooleanMassager(sectiongroupname, 'debug-commands')])
 
