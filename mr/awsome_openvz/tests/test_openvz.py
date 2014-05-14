@@ -174,13 +174,13 @@ class OpenVZSetupTests(TestCase):
             '[vz-master:default]',
             '[vz-instance:foo]',
             'veid = 101']))
-        with patch('mr.awsome.plain.log') as LogMock:
+        with patch('mr.awsome.common.log') as LogMock:
             with self.assertRaises(SystemExit):
                 self.aws(['./bin/aws', 'status', 'foo'])
         self.assertEquals(
             LogMock.error.call_args_list, [
                 (("Couldn't connect to vz-master:default.",), {}),
-                ((u'No host set in config.',), {})])
+                ((u'No host or ip set in config.',), {})])
 
     def testNoFingerprintSetOnMaster(self):
         self._write_config('\n'.join([
@@ -188,7 +188,7 @@ class OpenVZSetupTests(TestCase):
             'host = localhost',
             '[vz-instance:foo]',
             'veid = 101']))
-        with patch('mr.awsome.plain.log') as LogMock:
+        with patch('mr.awsome.common.log') as LogMock:
             with self.assertRaises(SystemExit):
                 self.aws(['./bin/aws', 'status', 'foo'])
         self.assertEquals(
