@@ -1,7 +1,7 @@
 from StringIO import StringIO
 from mock import patch
-from mr.awsome import AWS
-from mr.awsome.config import Config
+from ploy import Controller
+from ploy.config import Config
 from unittest2 import TestCase
 import os
 import pytest
@@ -129,15 +129,15 @@ vzlist_output = "\n".join([
 
 class OpenVZSetupTests(TestCase):
     def setUp(self):
-        import mr.awsome_openvz
+        import ploy_openvz
         try:  # pragma: no cover - we support both
             import paramiko
             paramiko  # shutup pyflakes
         except ImportError:  # pragma: no cover - we support both
             import ssh as paramiko
         self.directory = tempfile.mkdtemp()
-        self.aws = AWS(self.directory)
-        self.aws.__dict__['plugins'] = {'vz': mr.awsome_openvz.plugin}
+        self.ctrl = Controller(self.directory)
+        self.ctrl.__dict__['plugins'] = {'vz': ploy_openvz.plugin}
         self._ssh_client_mock = patch("%s.SSHClient" % paramiko.__name__)
         self.ssh_client_mock = self._ssh_client_mock.start()
         self._ssh_config_mock = patch("%s.SSHConfig" % paramiko.__name__)
@@ -157,16 +157,16 @@ class OpenVZSetupTests(TestCase):
         del self.directory
 
     def _write_config(self, content):
-        with open(os.path.join(self.directory, 'aws.conf'), 'w') as f:
+        with open(os.path.join(self.directory, 'ploy.conf'), 'w') as f:
             f.write(content)
 
     def testNoVeid(self):
         self._write_config('\n'.join([
             '[vz-master:default]',
             '[vz-instance:foo]']))
-        with patch('mr.awsome_openvz.log') as LogMock:
+        with patch('ploy_openvz.log') as LogMock:
             with self.assertRaises(SystemExit):
-                self.aws(['./bin/aws', 'status', 'foo'])
+                self.ctrl(['./bin/ploy', 'status', 'foo'])
         LogMock.error.assert_called_with("No veid set in vz-instance:%s.", 'foo')
 
     def testNoHostSetOnMaster(self):
@@ -174,9 +174,9 @@ class OpenVZSetupTests(TestCase):
             '[vz-master:default]',
             '[vz-instance:foo]',
             'veid = 101']))
-        with patch('mr.awsome.common.log') as LogMock:
+        with patch('ploy.common.log') as LogMock:
             with self.assertRaises(SystemExit):
-                self.aws(['./bin/aws', 'status', 'foo'])
+                self.ctrl(['./bin/ploy', 'status', 'foo'])
         self.assertEquals(
             LogMock.error.call_args_list, [
                 (("Couldn't connect to vz-master:default.",), {}),
@@ -185,15 +185,15 @@ class OpenVZSetupTests(TestCase):
 
 class OpenVZTests(TestCase):
     def setUp(self):
-        import mr.awsome_openvz
+        import ploy_openvz
         try:  # pragma: no cover - we support both
             import paramiko
             paramiko  # shutup pyflakes
         except ImportError:  # pragma: no cover - we support both
             import ssh as paramiko
         self.directory = tempfile.mkdtemp()
-        self.aws = AWS(self.directory)
-        self.aws.__dict__['plugins'] = {'vz': mr.awsome_openvz.plugin}
+        self.ctrl = Controller(self.directory)
+        self.ctrl.__dict__['plugins'] = {'vz': ploy_openvz.plugin}
         self._ssh_client_mock = patch("%s.SSHClient" % paramiko.__name__)
         self.ssh_client_mock = self._ssh_client_mock.start()
         self.ssh_client_exec_results = []
@@ -225,7 +225,7 @@ class OpenVZTests(TestCase):
         del self.directory
 
     def _write_config(self, content):
-        with open(os.path.join(self.directory, 'aws.conf'), 'w') as f:
+        with open(os.path.join(self.directory, 'ploy.conf'), 'w') as f:
             f.write('\n'.join([
                 '[vz-master:default]',
                 'host = localhost',
@@ -243,9 +243,9 @@ class OpenVZTests(TestCase):
         self.ssh_client_exec_results.append((
             'vzlist -a -o hostname,ip,name,status,veid 101',
             ('', 'VE not found')))
-        with patch('mr.awsome_openvz.log') as LogMock:
+        with patch('ploy_openvz.log') as LogMock:
             try:
-                self.aws(['./bin/aws', 'status', 'foo'])
+                self.ctrl(['./bin/ploy', 'status', 'foo'])
             except SystemExit:  # pragma: no cover - only if something is wrong
                 self.fail("SystemExit raised")
         self.assertEquals(
@@ -262,9 +262,9 @@ class OpenVZTests(TestCase):
         self.ssh_client_exec_results.append((
             'vzlist -a -o hostname,ip,name,status,veid 101',
             ('', 'Container(s) not found')))
-        with patch('mr.awsome_openvz.log') as LogMock:
+        with patch('ploy_openvz.log') as LogMock:
             try:
-                self.aws(['./bin/aws', 'status', 'foo'])
+                self.ctrl(['./bin/ploy', 'status', 'foo'])
             except SystemExit:  # pragma: no cover - only if something is wrong
                 self.fail("SystemExit raised")
         self.assertEquals(
@@ -282,9 +282,9 @@ class OpenVZTests(TestCase):
             'vzlist -a -o hostname,ip,name,status,veid 101', (
                 "STATUS  IP_ADDR         HOSTNAME                               VEID NAME\n"
                 "running 10.0.0.1        foo.example.com                         101 -", '')))
-        with patch('mr.awsome_openvz.log') as LogMock:
+        with patch('ploy_openvz.log') as LogMock:
             try:
-                self.aws(['./bin/aws', 'status', 'foo'])
+                self.ctrl(['./bin/ploy', 'status', 'foo'])
             except SystemExit:  # pragma: no cover - only if something is wrong
                 self.fail("SystemExit raised")
         self.assertEquals(
@@ -303,7 +303,7 @@ class DummyPlugin(object):
 
 
 def test_mounts_massager_invalid_option():
-    from mr.awsome_openvz import MountsMassager
+    from ploy_openvz import MountsMassager
     dummyplugin = DummyPlugin()
     plugins = dict(
         dummy=dict(
@@ -319,7 +319,7 @@ def test_mounts_massager_invalid_option():
 
 
 def test_mounts_massager():
-    from mr.awsome_openvz import MountsMassager
+    from ploy_openvz import MountsMassager
     dummyplugin = DummyPlugin()
     plugins = dict(
         dummy=dict(

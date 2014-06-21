@@ -4,6 +4,8 @@ Changelog
 1.0b3 - unreleased
 ------------------
 
+* Renamed mr.awsome to ploy and mr.awsome.openvz to ploy_openvz.
+  [fschulze]
 
 
 1.0b2 - 2014-05-15

@@ -1,16 +1,16 @@
 from lazy import lazy
-from mr.awsome.common import BaseMaster, StartupScriptMixin
-from mr.awsome.config import BaseMassager, BooleanMassager
-from mr.awsome.config import IntegerMassager
-from mr.awsome.config import StartupScriptMassager, UserMassager
-from mr.awsome.config import value_asbool
-from mr.awsome.plain import Instance as PlainInstance
+from ploy.common import BaseMaster, StartupScriptMixin
+from ploy.config import BaseMassager, BooleanMassager
+from ploy.config import IntegerMassager
+from ploy.config import StartupScriptMassager, UserMassager
+from ploy.config import value_asbool
+from ploy.plain import Instance as PlainInstance
 import logging
 import sys
 import time
 
 
-log = logging.getLogger('mr.awsome.openvz')
+log = logging.getLogger('ploy_openvz')
 
 
 class OpenVZError(Exception):
@@ -422,10 +422,10 @@ def get_massagers():
     return massagers
 
 
-def get_masters(aws):
-    masters = aws.config.get('vz-master', {})
+def get_masters(ctrl):
+    masters = ctrl.config.get('vz-master', {})
     for master, master_config in masters.iteritems():
-        yield Master(aws, master, master_config)
+        yield Master(ctrl, master, master_config)
 
 
 plugin = dict(

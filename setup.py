@@ -11,21 +11,20 @@ version = "1.0b3"
 
 setup(
     version=version,
-    description="A plugin for mr.awsome providing support for OpenVZ containers.",
+    description="A plugin for ploy providing support for OpenVZ containers.",
     long_description=README + "\n\n",
-    name="mr.awsome.openvz",
+    name="ploy_openvz",
     author='Florian Schulze',
     author_email='florian.schulze@gmx.net',
-    url='http://github.com/fschulze/mr.awsome.openvz',
+    url='http://github.com/ployground/ploy_openvz',
     include_package_data=True,
     zip_safe=False,
-    packages=['mr'],
-    namespace_packages=['mr'],
+    packages=['ploy_openvz'],
     install_requires=[
         'setuptools',
-        'mr.awsome >= 1.0rc2',
+        'ploy >= 1.0rc9',
         'lazy'],
     entry_points="""
-        [mr.awsome.plugins]
-        vz = mr.awsome_openvz:plugin
+        [ploy.plugins]
+        vz = ploy_openvz:plugin
     """)
