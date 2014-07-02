@@ -1,6 +1,7 @@
 from StringIO import StringIO
 from mock import patch
 from ploy import Controller
+from ploy.common import import_paramiko
 from ploy.config import Config
 from unittest2 import TestCase
 import os
@@ -130,11 +131,7 @@ vzlist_output = "\n".join([
 class OpenVZSetupTests(TestCase):
     def setUp(self):
         import ploy_openvz
-        try:  # pragma: no cover - we support both
-            import paramiko
-            paramiko  # shutup pyflakes
-        except ImportError:  # pragma: no cover - we support both
-            import ssh as paramiko
+        paramiko = import_paramiko()
         self.directory = tempfile.mkdtemp()
         self.ctrl = Controller(self.directory)
         self.ctrl.__dict__['plugins'] = {'vz': ploy_openvz.plugin}
@@ -186,11 +183,7 @@ class OpenVZSetupTests(TestCase):
 class OpenVZTests(TestCase):
     def setUp(self):
         import ploy_openvz
-        try:  # pragma: no cover - we support both
-            import paramiko
-            paramiko  # shutup pyflakes
-        except ImportError:  # pragma: no cover - we support both
-            import ssh as paramiko
+        paramiko = import_paramiko()
         self.directory = tempfile.mkdtemp()
         self.ctrl = Controller(self.directory)
         self.ctrl.__dict__['plugins'] = {'vz': ploy_openvz.plugin}
