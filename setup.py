@@ -18,6 +18,13 @@ setup(
     author_email='florian.schulze@gmx.net',
     license="BSD 3-Clause License",
     url='http://github.com/ployground/ploy_openvz',
+    classifiers=[
+        'Environment :: Console',
+        'Intended Audience :: System Administrators',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: System :: Installation/Setup',
+        'Topic :: System :: Systems Administration'],
     include_package_data=True,
     zip_safe=False,
     packages=['ploy_openvz'],
