@@ -30,7 +30,7 @@ setup(
     packages=['ploy_openvz'],
     install_requires=[
         'setuptools',
-        'ploy >= 1.0rc9',
+        'ploy >= 1.0.0, < 2dev',
         'lazy'],
     entry_points="""
         [ploy.plugins]
